@@ -47,6 +47,33 @@ try {
   /* swagger docs optional — skip if yaml or module missing */
 }
 
+const fs = require("fs");
+const publicDir = path.resolve(__dirname, "../api/public");
+if (fs.existsSync(publicDir)) {
+  const mimeTypes = {
+    ".html": "text/html", ".js": "application/javascript", ".css": "text/css",
+    ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png",
+    ".jpg": "image/jpeg", ".ico": "image/x-icon", ".woff": "font/woff", ".woff2": "font/woff2",
+  };
+  app.use((req, res, next) => {
+    if (req.method !== "GET" || req.path.startsWith("/api/")) return next();
+    let urlPath = req.path;
+    if (urlPath === "/") urlPath = "/index.html";
+    const filePath = path.join(publicDir, urlPath);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const ext = path.extname(filePath);
+      res.setHeader("Content-Type", mimeTypes[ext] || "application/octet-stream");
+      return fs.createReadStream(filePath).pipe(res);
+    }
+    const indexPath = path.join(publicDir, "index.html");
+    if (fs.existsSync(indexPath)) {
+      res.setHeader("Content-Type", "text/html");
+      return fs.createReadStream(indexPath).pipe(res);
+    }
+    next();
+  });
+}
+
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
