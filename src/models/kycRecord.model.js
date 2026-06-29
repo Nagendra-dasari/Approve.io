@@ -13,4 +13,10 @@ const kycRecordSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// One KYC document per external user (avoids split OTP / verify state across duplicates).
+kycRecordSchema.index(
+  { tenantId: 1, refType: 1, refId: 1 },
+  { unique: true, partialFilterExpression: { refType: "EXTERNAL_USER" } }
+);
+
 module.exports = mongoose.model("KycRecord", kycRecordSchema);

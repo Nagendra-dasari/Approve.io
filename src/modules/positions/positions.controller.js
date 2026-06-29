@@ -36,9 +36,19 @@ async function getSubtree(req, res, next) {
   }
 }
 
+async function deletePositions(req, res, next) {
+  try {
+    const result = await positionsService.deletePositions(req.tenantId, req.body.positionIds, req.auth);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createPosition,
   listPositions,
   updatePosition,
   getSubtree,
+  deletePositions,
 };

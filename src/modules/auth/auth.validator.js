@@ -18,23 +18,36 @@ const loginSchema = Joi.object({
 });
 
 const inviteSchema = Joi.object({
-  tenantId: Joi.string().required(),
+  tenantId: Joi.string().optional(),
   name: Joi.string().min(2).required(),
-  email: Joi.string().email().required(),
+  email: Joi.string().email({ tlds: { allow: false } }).required(),
   empCode: Joi.string().trim().max(64).allow(null, "").optional(),
   roleIds: Joi.array().items(Joi.string()).default([]),
   currentPositionId: Joi.string().allow(null).default(null),
 });
 
-const verifyOtpSchema = Joi.object({
-  inviteToken: Joi.string().required(),
-  otpCode: Joi.string().length(6).required(),
-});
+const verifyOtpSchema = Joi.alternatives().try(
+  Joi.object({
+    inviteToken: Joi.string().trim().min(1).required(),
+    otpCode: Joi.string().length(6).required(),
+  }),
+  Joi.object({
+    email: Joi.string().email({ tlds: { allow: false } }).required(),
+    otpCode: Joi.string().length(6).required(),
+  }),
+);
 
-const setPasswordSchema = Joi.object({
-  inviteToken: Joi.string().required(),
-  password: Joi.string().min(8).required(),
-});
+const setPasswordSchema = Joi.alternatives().try(
+  Joi.object({
+    inviteToken: Joi.string().trim().min(1).required(),
+    password: Joi.string().min(8).required(),
+  }),
+  Joi.object({
+    email: Joi.string().email({ tlds: { allow: false } }).required(),
+    invitationCode: Joi.string().trim().min(4).max(32).required(),
+    password: Joi.string().min(8).required(),
+  }),
+);
 
 const refreshSchema = Joi.object({
   refreshToken: Joi.string().required(),
@@ -42,7 +55,7 @@ const refreshSchema = Joi.object({
 
 const resendInviteSchema = Joi.object({
   tenantId: Joi.string().required(),
-  email: Joi.string().email().required(),
+  email: Joi.string().email({ tlds: { allow: false } }).required(),
 });
 
 const forgotPasswordSchema = Joi.object({

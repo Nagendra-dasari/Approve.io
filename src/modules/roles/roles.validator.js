@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const ApiError = require("../../common/errors/ApiError");
+const { ORG_SCOPES } = require("../../models/role.model");
 
 function validate(schema) {
   return (req, res, next) => {
@@ -29,6 +30,11 @@ const updateRoleSchema = Joi.object({
   name: Joi.string().min(2),
   permissionIds: Joi.array().items(Joi.string()),
   permissionCodes: Joi.array().items(Joi.string()),
+  aliases: Joi.array().items(Joi.string()),
+  orgLevelOverride: Joi.number().integer().min(1).allow(null),
+  orgScopeOverride: Joi.string()
+    .valid(...ORG_SCOPES)
+    .allow(null),
 })
   .min(1)
   .custom((value, helpers) => {
@@ -43,8 +49,13 @@ const updateRoleSchema = Joi.object({
     return value;
   });
 
+const bulkDeleteRolesSchema = Joi.object({
+  roleIds: Joi.array().items(Joi.string()).min(1).required(),
+});
+
 module.exports = {
   validate,
   createRoleSchema,
   updateRoleSchema,
+  bulkDeleteRolesSchema,
 };

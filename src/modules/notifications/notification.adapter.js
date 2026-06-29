@@ -21,23 +21,40 @@ function getTransporter() {
   return transporter;
 }
 
+async function verifySmtpConnection() {
+  try {
+    await getTransporter().verify();
+    logger.info("SMTP connection verified successfully");
+    return true;
+  } catch (err) {
+    logger.error({ err: err.message }, "SMTP connection verification failed");
+    return false;
+  }
+}
+
 async function sendEmail({ to, subject, html }) {
   if (env.EMAIL_MODE === "smtp" && env.SMTP_HOST) {
     const sender = env.SMTP_FROM || env.SMTP_USER || "no-reply@pink.local";
-    await getTransporter().sendMail({
-      from: sender,
-      to,
-      subject,
-      html,
-    });
-    logger.info({ to, subject }, "SMTP email notification sent");
-    return;
+    try {
+      await getTransporter().sendMail({
+        from: sender,
+        to,
+        subject,
+        html,
+      });
+      logger.info({ to, subject }, "SMTP email sent successfully");
+      return { success: true, mode: "smtp" };
+    } catch (err) {
+      logger.error({ to, subject, err: err.message }, "SMTP email failed");
+      throw err;
+    }
   }
 
-  // Dev-friendly mode (Mailtrap/mock) to avoid external SMTP dependency.
-  logger.info({ to, subject, htmlLength: html?.length || 0 }, "Mock email notification sent");
+  logger.info({ to, subject, htmlLength: html?.length || 0 }, "Mock email (not delivered)");
+  return { success: true, mode: "mock" };
 }
 
 module.exports = {
   sendEmail,
+  verifySmtpConnection,
 };

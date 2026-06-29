@@ -29,7 +29,7 @@ describe("auth.controller", () => {
   });
 
   it("inviteUser returns 201 with service response", async () => {
-    const req = { body: { email: "alice@test.com" } };
+    const req = { body: { email: "alice@test.com", name: "Alice", tenantId: "t1" } };
     const res = createRes();
     const next = jest.fn();
     authService.inviteUser.mockResolvedValue({ userId: "u-1" });
@@ -38,6 +38,21 @@ describe("auth.controller", () => {
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith({ userId: "u-1" });
+    expect(authService.inviteUser).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: "t1", email: "alice@test.com" }),
+    );
+  });
+
+  it("inviteUser merges req.tenantId when body omits tenantId", async () => {
+    const req = { body: { email: "bob@test.com", name: "Bob" }, tenantId: "t-ctx" };
+    const res = createRes();
+    const next = jest.fn();
+    authService.inviteUser.mockResolvedValue({ userId: "u-2" });
+
+    await controller.inviteUser(req, res, next);
+
+    expect(authService.inviteUser).toHaveBeenCalledWith(expect.objectContaining({ tenantId: "t-ctx" }));
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("verifyOtp forwards errors to next", async () => {

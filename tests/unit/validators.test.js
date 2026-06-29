@@ -38,7 +38,7 @@ describe("module validators", () => {
   });
 
   it("position validator handles valid and invalid payloads", () => {
-    const validReq = { body: { title: "Lead", levelName: "1L" } };
+    const validReq = { body: { roleId: "r1", levelName: "1L" } };
     const validNext = nextMock();
     positionValidator.validate(positionValidator.createPositionSchema)(validReq, {}, validNext);
     expect(validNext).toHaveBeenCalledWith();

@@ -15,13 +15,15 @@ function validate(schema) {
 const createTenantSchema = Joi.object({
   name: Joi.string().min(2).required(),
   code: Joi.string().alphanum().min(2).max(20).required(),
+  adminEmail: Joi.string().email({ tlds: { allow: false } }).required(),
   plan: Joi.string().default("starter"),
   status: Joi.string().valid("ACTIVE", "SUSPENDED").default("ACTIVE"),
 });
 
 const updateTenantSchema = Joi.object({
-  name: Joi.string().min(2),
-  plan: Joi.string(),
+  name: Joi.string().min(2).allow("", null),
+  adminEmail: Joi.string().email({ tlds: { allow: false } }).allow("", null),
+  plan: Joi.string().allow("", null),
   status: Joi.string().valid("ACTIVE", "SUSPENDED"),
 }).min(1);
 

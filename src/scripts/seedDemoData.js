@@ -36,7 +36,14 @@ async function seed() {
   const allPermissionIds = permissions.map((p) => p._id);
   const roleConfigs = [
     { name: "Tenant Admin", codes: allPermissionIds },
-    { name: "Level 1 Manager", codes: permissions.filter((p) => ["workflow.submit", "workflow.approve", "employee.view", "form.view"].includes(p.code)).map((p) => p._id) },
+    {
+      name: "Level 1 Manager",
+      codes: permissions
+        .filter((p) =>
+          ["workflow.submit", "workflow.approve", "employee.view", "form.view", "kyc.manage", "list.users"].includes(p.code),
+        )
+        .map((p) => p._id),
+    },
     { name: "Level 2 Approver", codes: permissions.filter((p) => ["workflow.approve", "workflow.return", "report.view", "audit.view"].includes(p.code)).map((p) => p._id) },
   ];
 

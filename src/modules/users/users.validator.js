@@ -17,9 +17,21 @@ const patchUserSchema = Joi.object({
   empCode: Joi.string().trim().max(64).allow(null, ""),
   roleIds: Joi.array().items(Joi.string()),
   currentPositionId: Joi.string().allow(null, ""),
+  reportingToUserId: Joi.string().allow(null, ""),
+  designationOverride: Joi.string().trim().max(200).allow(null, ""),
+  zone: Joi.string().trim().max(120).allow(null, ""),
+  region: Joi.string().trim().max(120).allow(null, ""),
+  state: Joi.string().trim().max(120).allow(null, ""),
+  hq: Joi.string().trim().max(120).allow(null, ""),
 }).min(1);
+
+const bulkAssignSchema = Joi.object({
+  userIds: Joi.array().items(Joi.string()).min(1).required(),
+  reportingToUserId: Joi.string().allow(null).required(),
+});
 
 module.exports = {
   validate,
   patchUserSchema,
+  bulkAssignSchema,
 };

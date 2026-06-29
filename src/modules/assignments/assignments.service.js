@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Assignment = require("../../models/assignment.model");
 const Position = require("../../models/position.model");
 const User = require("../../models/user.model");
@@ -51,6 +52,33 @@ async function assignSeat(tenantId, payload, actor) {
   return assignment;
 }
 
+/**
+ * Import / bulk flows: set this user's current seat without unseating other users
+ * who share the same position (shared job titles).
+ */
+async function replaceUserCurrentAssignment(tenantId, userId, positionId) {
+  if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(positionId)) {
+    return null;
+  }
+  const position = await Position.findOne({ _id: positionId, tenantId, status: "ACTIVE" });
+  if (!position) {
+    return null;
+  }
+  await Assignment.updateMany(
+    { tenantId, userId, isCurrent: true },
+    { $set: { isCurrent: false, activeTo: new Date() } }
+  );
+  const assignment = await Assignment.create({
+    tenantId,
+    userId,
+    positionId,
+    activeFrom: new Date(),
+    isCurrent: true,
+  });
+  await User.updateOne({ _id: userId, tenantId }, { $set: { currentPositionId: positionId } });
+  return assignment;
+}
+
 async function listAssignments(tenantId, query) {
   const filter = { tenantId };
   if (query.positionId) {
@@ -68,4 +96,5 @@ async function listAssignments(tenantId, query) {
 module.exports = {
   assignSeat,
   listAssignments,
+  replaceUserCurrentAssignment,
 };

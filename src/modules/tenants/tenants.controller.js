@@ -18,6 +18,15 @@ async function listTenants(req, res, next) {
   }
 }
 
+async function getCurrentTenant(req, res, next) {
+  try {
+    const tenant = await tenantsService.getCurrentTenant(req.auth.tenantId);
+    res.status(200).json(tenant);
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function updateTenant(req, res, next) {
   try {
     const tenant = await tenantsService.updateTenant(req.params.tenantId, req.body, req.auth);
@@ -27,8 +36,29 @@ async function updateTenant(req, res, next) {
   }
 }
 
+async function sendTenantCredentials(req, res, next) {
+  try {
+    const result = await tenantsService.sendTenantCredentials(req.params.tenantId, req.auth);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteTenant(req, res, next) {
+  try {
+    await tenantsService.deleteTenant(req.params.tenantId, req.auth);
+    res.sendStatus(204);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createTenant,
   listTenants,
+  getCurrentTenant,
   updateTenant,
+  sendTenantCredentials,
+  deleteTenant,
 };

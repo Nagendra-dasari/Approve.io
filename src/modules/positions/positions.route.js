@@ -1,6 +1,6 @@
 const express = require("express");
 const controller = require("./positions.controller");
-const { validate, createPositionSchema, updatePositionSchema } = require("./positions.validator");
+const { validate, createPositionSchema, updatePositionSchema, deletePositionsSchema } = require("./positions.validator");
 const authMiddleware = require("../../middlewares/auth.middleware");
 const tenantMiddleware = require("../../middlewares/tenant.middleware");
 const permissionMiddleware = require("../../middlewares/permission.middleware");
@@ -33,6 +33,14 @@ router.get(
   permissionMiddleware("employee.view"),
   hierarchyMiddleware(),
   controller.getSubtree
+);
+router.delete(
+  "/",
+  authMiddleware,
+  tenantMiddleware,
+  permissionMiddleware("position.update"),
+  validate(deletePositionsSchema),
+  controller.deletePositions
 );
 
 module.exports = router;

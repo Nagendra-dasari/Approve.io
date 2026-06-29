@@ -11,10 +11,12 @@ const {
   forgotPasswordSchema,
   resetPasswordSchema,
 } = require("./auth.validator");
+const authMiddleware = require("../../middlewares/auth.middleware");
 
 const router = express.Router();
 
 router.post("/login", validate(loginSchema), controller.login);
+router.get("/me", authMiddleware, controller.me);
 router.post("/refresh", validate(refreshSchema), controller.refresh);
 router.post("/verify-otp", validate(verifyOtpSchema), controller.verifyOtp);
 router.post("/set-password", validate(setPasswordSchema), controller.setPassword);

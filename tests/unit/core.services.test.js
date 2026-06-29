@@ -33,18 +33,32 @@ describe("core services", () => {
     const created = await tenantsService.createTenant({ name: "Acme", code: "acme" }, { userId: "u1" });
     const listed = await tenantsService.listTenants();
     const updated = await tenantsService.updateTenant("t1", { plan: "pro" }, { userId: "u1" });
+    const tenantOid = "507f1f77bcf86cd799439011";
+    Tenant.findById.mockReturnValue({
+      lean: jest.fn().mockResolvedValue({ _id: tenantOid, name: "Acme", code: "ACME" }),
+    });
+    const current = await tenantsService.getCurrentTenant(tenantOid);
 
     expect(created.code).toBe("ACME");
     expect(listed).toHaveLength(1);
     expect(updated._id).toBe("t1");
+    expect(current.name).toBe("Acme");
   });
 
   it("creates, lists, updates role", async () => {
-    Role.findOne.mockResolvedValue(null);
+    Role.findOne.mockResolvedValueOnce(null);
     Role.create.mockResolvedValue({ _id: "r1" });
     Role.findById.mockReturnValue({ populate: jest.fn().mockResolvedValue({ _id: "r1" }) });
     Role.find.mockReturnValue({ populate: jest.fn().mockResolvedValue([{ _id: "r1" }]) });
-    Role.findOneAndUpdate.mockReturnValue({ populate: jest.fn().mockResolvedValue({ _id: "r1" }) });
+    const roleDoc = {
+      _id: "r1",
+      name: "Admin",
+      aliases: [],
+      permissionIds: ["p1"],
+      override: {},
+      save: jest.fn().mockResolvedValue(undefined),
+    };
+    Role.findOne.mockResolvedValueOnce(roleDoc);
 
     const created = await rolesService.createRole("t1", { name: "Admin", permissionIds: ["p1"] }, { userId: "u1" });
     const listed = await rolesService.listRoles("t1");
@@ -53,6 +67,7 @@ describe("core services", () => {
     expect(created._id).toBe("r1");
     expect(listed[0]._id).toBe("r1");
     expect(updated._id).toBe("r1");
+    expect(roleDoc.save).toHaveBeenCalled();
   });
 
   it("creates role using permission codes resolved to ids", async () => {
@@ -88,18 +103,29 @@ describe("core services", () => {
   });
 
   it("creates and updates position and subtree", async () => {
-    Position.findOne.mockResolvedValue({ _id: "p0", status: "ACTIVE" });
+    Role.findOne.mockResolvedValue({ _id: "role1", name: "TL" });
+    Position.findOne.mockResolvedValueOnce({ _id: "p0", status: "ACTIVE" }).mockResolvedValueOnce(null);
     Position.create.mockResolvedValue({ _id: "p1" });
-    Position.find.mockReturnValue({
-      sort: jest.fn().mockResolvedValue([{ _id: "p1" }]),
+    const listQuery = {};
+    listQuery.populate = jest.fn().mockReturnValue(listQuery);
+    listQuery.sort = jest.fn().mockResolvedValue([{ _id: "p1" }]);
+    Position.find.mockReturnValueOnce(listQuery).mockReturnValueOnce({
       lean: jest.fn().mockResolvedValue([
         { _id: "p1", parentPositionId: null },
         { _id: "p2", parentPositionId: "p1" },
       ]),
     });
-    Position.findOneAndUpdate.mockResolvedValue({ _id: "p1" });
+    Position.findOneAndUpdate.mockReturnValue({
+      populate: jest.fn().mockReturnValue({
+        populate: jest.fn().mockResolvedValue({ _id: "p1" }),
+      }),
+    });
 
-    const created = await positionsService.createPosition("t1", { title: "TL", levelName: "1L", parentPositionId: "p0" }, { userId: "u1" });
+    const created = await positionsService.createPosition(
+      "t1",
+      { roleId: "role1", levelName: "1L", parentPositionId: "p0" },
+      { userId: "u1" },
+    );
     const listed = await positionsService.listPositions("t1");
     const updated = await positionsService.updatePosition("t1", "p1", { title: "TL2" }, { userId: "u1" });
     const ids = await hierarchyService.getSubtreePositionIds("t1", "p1");

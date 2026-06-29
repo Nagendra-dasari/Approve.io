@@ -10,6 +10,11 @@ module.exports = [
       globals: {
         process: "readonly",
         console: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
+        module: "readonly",
+        require: "readonly",
+        exports: "readonly",
       },
     },
     rules: {

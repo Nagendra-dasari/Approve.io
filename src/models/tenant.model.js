@@ -4,6 +4,7 @@ const tenantSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     code: { type: String, required: true, unique: true, uppercase: true },
+    adminEmail: { type: String, default: null, lowercase: true, trim: true },
     plan: { type: String, default: "starter" },
     status: {
       type: String,

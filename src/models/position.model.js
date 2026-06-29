@@ -8,6 +8,7 @@ const positionSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    roleId: { type: mongoose.Schema.Types.ObjectId, ref: "Role", required: false, index: true, default: null },
     title: { type: String, required: true, trim: true },
     levelName: { type: String, required: true, trim: true },
     parentPositionId: { type: mongoose.Schema.Types.ObjectId, ref: "Position", default: null },
@@ -17,5 +18,6 @@ const positionSchema = new mongoose.Schema(
 );
 
 positionSchema.index({ tenantId: 1, parentPositionId: 1 });
+positionSchema.index({ tenantId: 1, roleId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("Position", positionSchema);

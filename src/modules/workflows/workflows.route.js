@@ -48,7 +48,7 @@ router.post("/", authMiddleware, tenantMiddleware, permissionMiddleware("workflo
   }
 });
 
-router.get("/", authMiddleware, tenantMiddleware, permissionMiddleware("workflow.submit"), async (req, res, next) => {
+router.get("/", authMiddleware, tenantMiddleware, permissionMiddleware(["workflow.submit", "workflow.status"]), async (req, res, next) => {
   try {
     const workflows = await Workflow.find({ tenantId: req.tenantId }).sort({ createdAt: -1 });
     res.status(200).json(workflows);
@@ -95,7 +95,7 @@ router.post(
   "/approvals/:submissionId/action",
   authMiddleware,
   tenantMiddleware,
-  permissionMiddleware("workflow.approve"),
+  permissionMiddleware(["workflow.approve", "workflow.reject"]),
   async (req, res, next) => {
     try {
       const schema = Joi.object({

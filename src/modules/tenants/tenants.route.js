@@ -6,6 +6,7 @@ const permissionMiddleware = require("../../middlewares/permission.middleware");
 
 const router = express.Router();
 
+router.get("/current", authMiddleware, controller.getCurrentTenant);
 router.get("/", authMiddleware, permissionMiddleware("tenant.manage"), controller.listTenants);
 router.post("/", authMiddleware, permissionMiddleware("tenant.manage"), validate(createTenantSchema), controller.createTenant);
 router.patch(
@@ -15,5 +16,12 @@ router.patch(
   validate(updateTenantSchema),
   controller.updateTenant
 );
+router.post(
+  "/:tenantId/send-credentials",
+  authMiddleware,
+  permissionMiddleware("tenant.send-credentials"),
+  controller.sendTenantCredentials
+);
+router.delete("/:tenantId", authMiddleware, permissionMiddleware("tenant.manage"), controller.deleteTenant);
 
 module.exports = router;

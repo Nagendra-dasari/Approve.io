@@ -8,7 +8,7 @@ const externalUserSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, default: null },
     phone: { type: String, default: null },
-    status: { type: String, enum: ["ACTIVE", "INACTIVE"], default: "ACTIVE" },
+    status: { type: String, enum: ["ACTIVE", "INACTIVE"], default: "INACTIVE" },
   },
   { timestamps: true }
 );

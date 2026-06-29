@@ -36,9 +36,29 @@ async function deleteRole(req, res, next) {
   }
 }
 
+async function bulkDeleteRoles(req, res, next) {
+  try {
+    const result = await rolesService.bulkDeleteRoles(req.tenantId, req.body.roleIds, req.auth);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function recomputeOrgChart(req, res, next) {
+  try {
+    const summary = await rolesService.recomputeOrgChart(req.tenantId, req.auth);
+    res.status(200).json(summary);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createRole,
   listRoles,
   updateRole,
   deleteRole,
+  bulkDeleteRoles,
+  recomputeOrgChart,
 };

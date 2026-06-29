@@ -13,20 +13,25 @@ function validate(schema) {
 }
 
 const createPositionSchema = Joi.object({
-  title: Joi.string().min(2).required(),
+  roleId: Joi.string().required(),
   levelName: Joi.string().min(1).required(),
   parentPositionId: Joi.string().allow(null).default(null),
 });
 
 const updatePositionSchema = Joi.object({
-  title: Joi.string().min(2),
+  roleId: Joi.string(),
   levelName: Joi.string().min(1),
   parentPositionId: Joi.string().allow(null),
   status: Joi.string().valid("ACTIVE", "INACTIVE"),
 }).min(1);
 
+const deletePositionsSchema = Joi.object({
+  positionIds: Joi.array().items(Joi.string()).min(1).required(),
+});
+
 module.exports = {
   validate,
   createPositionSchema,
   updatePositionSchema,
+  deletePositionsSchema,
 };

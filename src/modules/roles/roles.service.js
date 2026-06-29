@@ -1,7 +1,11 @@
 const Role = require("../../models/role.model");
 const Permission = require("../../models/permission.model");
+const Position = require("../../models/position.model");
+const User = require("../../models/user.model");
 const ApiError = require("../../common/errors/ApiError");
 const { writeAudit } = require("../../services/audit.service");
+const { runOrgRoleEngine } = require("../../services/orgRoleEngine.service");
+const { syncPositionLevelsFromOrg } = require("../positions/positions.service");
 
 async function resolvePermissionIds(payload) {
   const ids = new Set();
@@ -29,7 +33,7 @@ async function resolvePermissionIds(payload) {
 }
 
 async function createRole(tenantId, payload, actor) {
-  const existing = await Role.findOne({ tenantId, name: payload.name });
+  const existing = await Role.findOne({ tenantId, name: payload.name.trim() });
   if (existing) {
     throw new ApiError(409, "Role already exists");
   }
@@ -39,11 +43,15 @@ async function createRole(tenantId, payload, actor) {
     permissionCodes: payload.permissionCodes,
   });
 
+  const nameTrim = payload.name.trim();
   const role = await Role.create({
     tenantId,
-    name: payload.name,
+    name: nameTrim,
     type: payload.type || "CUSTOM",
     permissionIds,
+    aliases: [nameTrim.toUpperCase()],
+    auto: { level: 1, scope: "HQ", detectedAt: new Date() },
+    employeeCount: 0,
   });
 
   await writeAudit({
@@ -61,30 +69,65 @@ async function listRoles(tenantId) {
 }
 
 async function updateRole(tenantId, roleId, payload, actor) {
-  const update = {};
+  const role = await Role.findOne({ _id: roleId, tenantId });
+  if (!role) {
+    throw new ApiError(404, "Role not found");
+  }
+
   if (payload.name !== undefined) {
-    update.name = payload.name;
+    role.name = String(payload.name).trim();
+    const upper = role.name.toUpperCase();
+    if (upper && !(role.aliases || []).includes(upper)) {
+      role.aliases = [...(role.aliases || []), upper];
+    }
   }
   if (payload.permissionIds !== undefined || payload.permissionCodes !== undefined) {
-    update.permissionIds = await resolvePermissionIds({
+    role.permissionIds = await resolvePermissionIds({
       permissionIds: payload.permissionIds || [],
       permissionCodes: payload.permissionCodes || [],
     });
   }
-
-  const role = await Role.findOneAndUpdate({ _id: roleId, tenantId }, update, { returnDocument: "after" }).populate(
-    "permissionIds",
-  );
-  if (!role) {
-    throw new ApiError(404, "Role not found");
+  if (payload.aliases !== undefined) {
+    role.aliases = [...new Set((payload.aliases || []).map((a) => String(a).trim().toUpperCase()).filter(Boolean))];
   }
+  if (payload.orgLevelOverride !== undefined) {
+    if (!role.override) role.override = {};
+    if (payload.orgLevelOverride === null) {
+      delete role.override.level;
+    } else {
+      role.override.level = payload.orgLevelOverride;
+    }
+  }
+  if (payload.orgScopeOverride !== undefined) {
+    if (!role.override) role.override = {};
+    if (payload.orgScopeOverride === null) {
+      delete role.override.scope;
+    } else {
+      role.override.scope = payload.orgScopeOverride;
+    }
+  }
+
+  await role.save();
+
   await writeAudit({
     tenantId,
     userId: actor?.userId || null,
     action: "ROLE_UPDATED",
     metadata: { roleId: role._id },
   });
-  return role;
+  return Role.findById(role._id).populate("permissionIds");
+}
+
+async function recomputeOrgChart(tenantId, actor) {
+  const summary = await runOrgRoleEngine(tenantId);
+  await syncPositionLevelsFromOrg(tenantId);
+  await writeAudit({
+    tenantId,
+    userId: actor?.userId || null,
+    action: "ORG_ROLE_ENGINE_RUN",
+    metadata: summary,
+  });
+  return summary;
 }
 
 async function deleteRole(tenantId, roleId, actor) {
@@ -96,6 +139,9 @@ async function deleteRole(tenantId, roleId, actor) {
     throw new ApiError(403, "System roles cannot be deleted");
   }
   await Role.deleteOne({ _id: roleId, tenantId });
+  await Position.deleteMany({ tenantId, roleId });
+  await User.updateMany({ tenantId }, { $pull: { roleIds: role._id } });
+  await User.updateMany({ tenantId, roleIds: { $size: 0 } }, { $set: { reportingToUserId: null } });
   await writeAudit({
     tenantId,
     userId: actor?.userId || null,
@@ -104,9 +150,33 @@ async function deleteRole(tenantId, roleId, actor) {
   });
 }
 
+async function bulkDeleteRoles(tenantId, roleIds, actor) {
+  const uniqueRoleIds = [...new Set((roleIds || []).map((id) => String(id).trim()).filter(Boolean))];
+  if (!uniqueRoleIds.length) {
+    throw new ApiError(400, "No roles selected");
+  }
+  const roles = await Role.find({ tenantId, _id: { $in: uniqueRoleIds } });
+  const systemRole = roles.find((r) => r.type === "SYSTEM");
+  if (systemRole) {
+    throw new ApiError(403, "System roles cannot be deleted");
+  }
+  await Role.deleteMany({ tenantId, _id: { $in: uniqueRoleIds } });
+  await Position.deleteMany({ tenantId, roleId: { $in: uniqueRoleIds } });
+  await User.updateMany({ tenantId }, { $pull: { roleIds: { $in: uniqueRoleIds } } });
+  await writeAudit({
+    tenantId,
+    userId: actor?.userId || null,
+    action: "ROLE_DELETED_BULK",
+    metadata: { count: uniqueRoleIds.length, roleIds: uniqueRoleIds },
+  });
+  return { deletedCount: uniqueRoleIds.length };
+}
+
 module.exports = {
   createRole,
   listRoles,
   updateRole,
   deleteRole,
+  bulkDeleteRoles,
+  recomputeOrgChart,
 };

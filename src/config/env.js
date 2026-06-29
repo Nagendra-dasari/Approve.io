@@ -33,6 +33,13 @@ const schema = Joi.object({
   DEV_OTP: Joi.string().allow("").default(""),
   AWS_REGION: Joi.string().default("ap-south-1"),
   AWS_S3_BUCKET: Joi.string().allow("").default(""),
+  PINK_FORM_SUBMISSIONS_PATH: Joi.string().default("/api/v1/schema-forms/submissions"),
+  /** Public web app origin for links in invite emails (e.g. https://app.example.com). */
+  APP_PUBLIC_URL: Joi.string().allow("").default(""),
+  /** When APP_PUBLIC_URL is empty (dev), form links in email use this origin (Vite default port). */
+  DEV_APP_PUBLIC_URL: Joi.string().allow("").default("http://127.0.0.1:5173"),
+  /** Public API base for PDF links in emails (e.g. https://api.example.com). Defaults to localhost:PORT in dev. */
+  API_PUBLIC_URL: Joi.string().allow("").default(""),
 }).unknown();
 
 const { error, value } = schema.validate(process.env);

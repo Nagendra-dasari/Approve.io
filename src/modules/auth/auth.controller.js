@@ -1,4 +1,5 @@
 const authService = require("./auth.service");
+const ApiError = require("../../common/errors/ApiError");
 
 async function login(req, res, next) {
   try {
@@ -11,7 +12,11 @@ async function login(req, res, next) {
 
 async function inviteUser(req, res, next) {
   try {
-    const result = await authService.inviteUser(req.body);
+    const tenantId = req.body.tenantId || req.tenantId;
+    if (!tenantId) {
+      return next(new ApiError(400, "tenantId required"));
+    }
+    const result = await authService.inviteUser({ ...req.body, tenantId });
     res.status(201).json(result);
   } catch (error) {
     next(error);
@@ -72,6 +77,18 @@ async function resetPassword(req, res, next) {
   }
 }
 
+async function me(req, res, next) {
+  try {
+    const profile = await authService.getSessionProfile(req.auth.userId);
+    res.status(200).json({
+      ...profile,
+      permissionCodes: req.auth.permissionCodes || [],
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   login,
   inviteUser,
@@ -81,4 +98,5 @@ module.exports = {
   resendInvite,
   forgotPassword,
   resetPassword,
+  me,
 };

@@ -15,6 +15,9 @@ const notificationsRoutes = require("../modules/notifications/notifications.rout
 const importsRoutes = require("../modules/imports/imports.route");
 const auditRoutes = require("../modules/audit/audit.route");
 const publicRoutes = require("../modules/public/public.route");
+const schemaFormsRoutes = require("../modules/schema-forms/schema-forms.route");
+const orgExplorerRoutes = require("../modules/org-explorer/orgExplorer.route");
+const dashboardRoutes = require("../modules/dashboard/dashboard.route");
 
 const router = express.Router();
 
@@ -38,5 +41,8 @@ router.use("/notifications", notificationsRoutes);
 router.use("/imports", importsRoutes);
 router.use("/audit", auditRoutes);
 router.use("/public", publicRoutes);
+router.use("/schema-forms", schemaFormsRoutes);
+router.use("/org", orgExplorerRoutes);
+router.use("/dashboard", dashboardRoutes);
 
 module.exports = router;

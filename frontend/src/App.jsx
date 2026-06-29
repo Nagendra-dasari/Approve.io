@@ -13,22 +13,20 @@ import ResetPasswordPage from "./modules/auth/pages/ResetPasswordPage";
 import TenantsPage from "./modules/tenants/pages/TenantsPage";
 import RolesPage from "./modules/roles/pages/RolesPage";
 import PermissionsPage from "./modules/permissions/pages/PermissionsPage";
-import PositionsPage from "./modules/positions/pages/PositionsPage";
-import AssignmentsPage from "./modules/assignments/pages/AssignmentsPage";
-import PeoplePage from "./modules/users/pages/PeoplePage";
+import OrgEmployeePage from "./pages/OrgEmployeePage";
 import WorkflowsPage from "./modules/workflows/pages/WorkflowsPage";
+import FormDispatchApprovalsPage from "./modules/workflows/pages/FormDispatchApprovalsPage";
 import FormsPage from "./modules/forms/pages/FormsPage";
-import PublicLinksPage from "./modules/publicForms/pages/PublicLinksPage";
 import KycPage from "./modules/kyc/pages/KycPage";
-import SignaturesPage from "./modules/signatures/pages/SignaturesPage";
-import DocumentsPage from "./modules/documents/pages/DocumentsPage";
-import ImportsPage from "./modules/imports/pages/ImportsPage";
+import KycExternalFormsPage from "./modules/kyc/pages/KycExternalFormsPage";
 import NotificationsPage from "./modules/notifications/pages/NotificationsPage";
 import AuditPage from "./modules/audit/pages/AuditPage";
+import EmployeeManagementPage from "./pages/EmployeeManagementPage";
 import AccessDeniedPage from "./pages/AccessDeniedPage";
 import { ROUTE_PERMISSIONS } from "./lib/access-control";
-import SetupChecklistPage from "./pages/SetupChecklistPage";
-import PermissionMatrixPage from "./pages/PermissionMatrixPage";
+import PublicKycVerifyPage from "./pages/PublicKycVerifyPage";
+import PublicSchemaFormPage from "./pages/PublicSchemaFormPage";
+import PublicSchemaDispatchPage from "./pages/PublicSchemaDispatchPage";
 
 function App() {
   return (
@@ -41,6 +39,10 @@ function App() {
             <Route path="/set-password" element={<SetPasswordPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/public/kyc-verify" element={<PublicKycVerifyPage />} />
+            <Route path="/public/schema-forms/dispatch/:token" element={<PublicSchemaDispatchPage />} />
+            <Route path="/public/schema-forms/:moduleId" element={<PublicSchemaFormPage />} />
+            <Route path="/people" element={<Navigate to="/org-employees" replace />} />
             <Route
               path="/"
               element={
@@ -50,15 +52,6 @@ function App() {
               }
             >
               <Route index element={<DashboardPage />} />
-              <Route path="setup-checklist" element={<SetupChecklistPage />} />
-              <Route
-                path="permission-matrix"
-                element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/permission-matrix"]}>
-                    <PermissionMatrixPage />
-                  </ProtectedRoute>
-                }
-              />
               <Route
                 path="tenants"
                 element={
@@ -76,6 +69,14 @@ function App() {
                 }
               />
               <Route
+                path="org-employees"
+                element={
+                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/org-employees"]}>
+                    <OrgEmployeePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="permissions"
                 element={
                   <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/permissions"]}>
@@ -84,26 +85,10 @@ function App() {
                 }
               />
               <Route
-                path="positions"
+                path="employee-management"
                 element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/positions"]}>
-                    <PositionsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="people"
-                element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/people"]}>
-                    <PeoplePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="assignments"
-                element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/assignments"]}>
-                    <AssignmentsPage />
+                  <ProtectedRoute requiredPermissions={["user.view"]}>
+                    <EmployeeManagementPage />
                   </ProtectedRoute>
                 }
               />
@@ -116,18 +101,18 @@ function App() {
                 }
               />
               <Route
-                path="forms"
+                path="form-dispatch-approvals"
                 element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/forms"]}>
-                    <FormsPage />
+                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/form-dispatch-approvals"]}>
+                    <FormDispatchApprovalsPage />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="public-links"
+                path="forms"
                 element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/public-links"]}>
-                    <PublicLinksPage />
+                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/forms"]}>
+                    <FormsPage />
                   </ProtectedRoute>
                 }
               />
@@ -140,26 +125,10 @@ function App() {
                 }
               />
               <Route
-                path="signatures"
+                path="kyc-external-forms"
                 element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/signatures"]}>
-                    <SignaturesPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="documents"
-                element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/documents"]}>
-                    <DocumentsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="imports"
-                element={
-                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/imports"]}>
-                    <ImportsPage />
+                  <ProtectedRoute requiredPermissions={ROUTE_PERMISSIONS["/kyc-external-forms"]}>
+                    <KycExternalFormsPage />
                   </ProtectedRoute>
                 }
               />
