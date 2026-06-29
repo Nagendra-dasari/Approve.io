@@ -6,7 +6,7 @@
   "scripts": {
     "predev": "node scripts/ensure-org-embed.mjs",
     "dev": "vite",
-    "prebuild": "node -e \"try{require('child_process').execSync('npm run build:org-embed --prefix ..',{stdio:'inherit'})}catch(e){console.warn('org-embed build skipped')\"",
+    "prebuild": "node scripts/ensure-org-embed.mjs || true",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
