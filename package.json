@@ -13,7 +13,7 @@
     "test": "jest --runInBand --coverage",
     "test:detect-handles": "jest --runInBand --detectOpenHandles",
     "build:org-embed": "npm run build:embed --prefix test/client",
-    "build:frontend": "npm install --prefix frontend && npm run build --prefix frontend"
+    "build:frontend": "node build.js"
   },
   "keywords": [],
   "author": "",
