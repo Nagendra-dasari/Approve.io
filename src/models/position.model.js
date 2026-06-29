@@ -18,6 +18,6 @@ const positionSchema = new mongoose.Schema(
 );
 
 positionSchema.index({ tenantId: 1, parentPositionId: 1 });
-positionSchema.index({ tenantId: 1, roleId: 1 }, { unique: true, sparse: true });
+positionSchema.index({ tenantId: 1, roleId: 1 }, { sparse: true });
 
 module.exports = mongoose.model("Position", positionSchema);

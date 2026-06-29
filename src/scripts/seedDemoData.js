@@ -33,6 +33,8 @@ async function seed() {
     { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
   );
 
+  await Position.deleteMany({ tenantId: tenant._id });
+
   const allPermissionIds = permissions.map((p) => p._id);
   const roleConfigs = [
     { name: "Tenant Admin", codes: allPermissionIds },
