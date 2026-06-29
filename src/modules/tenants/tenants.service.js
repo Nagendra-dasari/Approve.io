@@ -82,6 +82,22 @@ async function createTenant(payload, actor) {
   const password = generatePassword();
   const passwordHash = await bcrypt.hash(password, 12);
 
+  const Permission = require("../../models/permission.model");
+  const permissionCatalog = require("../../common/constants/permissions");
+  const permDocs = [];
+  for (const item of permissionCatalog) {
+    const doc = await Permission.findOneAndUpdate({ code: item.code }, item, {
+      upsert: true, returnDocument: "after", setDefaultsOnInsert: true,
+    });
+    permDocs.push(doc);
+  }
+
+  const adminRole = await Role.findOneAndUpdate(
+    { tenantId: tenant._id, name: "Tenant Admin" },
+    { tenantId: tenant._id, name: "Tenant Admin", type: "SYSTEM", permissionIds: permDocs.map((d) => d._id) },
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
+  );
+
   await User.create({
     tenantId: tenant._id,
     name: `${payload.name} Admin`,
@@ -89,7 +105,7 @@ async function createTenant(payload, actor) {
     empCode,
     passwordHash,
     status: "ACTIVE",
-    roleIds: [],
+    roleIds: [adminRole._id],
   });
 
   const loginUrl = env.APP_PUBLIC_URL || "http://localhost:5173/login";
