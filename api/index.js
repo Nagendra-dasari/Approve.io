@@ -6,7 +6,7 @@ const env = require("../src/config/env");
 let isConnected = false;
 let appInstance = null;
 
-const frontendDist = path.join(__dirname, "../frontend/dist");
+const frontendDist = path.join(__dirname, "public");
 
 const mimeTypes = {
   ".html": "text/html",
