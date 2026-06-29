@@ -5,7 +5,7 @@ const frontendDir = path.join(__dirname, "frontend");
 
 try {
   console.log("Installing frontend deps in:", frontendDir);
-  execSync("npm install", { cwd: frontendDir, stdio: "inherit" });
+  execSync("npm install --include=dev", { cwd: frontendDir, stdio: "inherit" });
 
   console.log("Running vite build...");
   execSync("node node_modules/vite/bin/vite.js build", { cwd: frontendDir, stdio: "inherit" });
