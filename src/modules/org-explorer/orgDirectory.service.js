@@ -42,11 +42,19 @@ function userToPosition(u, roleById) {
 }
 
 async function loadSnapshot(tenantId) {
+  const allRoles = await Role.find({ tenantId }).lean();
+  const systemRoleIds = allRoles
+    .filter((r) => r.type === "SYSTEM")
+    .map((r) => String(r._id));
+
   const [users, roles] = await Promise.all([
     User.find({
       tenantId,
       orgLeftAt: null,
       status: { $in: ["ACTIVE", "INVITED", "OTP_PENDING"] },
+      ...(systemRoleIds.length
+        ? { roleIds: { $not: { $elemMatch: { $in: systemRoleIds } } } }
+        : {}),
     })
       .populate("roleIds")
       .populate("reportingToUserId", "name email empCode")
