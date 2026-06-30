@@ -84,10 +84,8 @@ interface ApiOpts {
 }
 
 function pinkApiRoot(): string {
-  const raw =
-    (__PINK_API_BASE__ && __PINK_API_BASE__.replace(/\/$/, '')) ||
-    'http://127.0.0.1:5001/api/v1';
-  return String(raw).replace(/\/$/, '');
+  const raw = __PINK_API_BASE__ && __PINK_API_BASE__.replace(/\/$/, '');
+  return String(raw || '').replace(/\/$/, '');
 }
 
 /** Map /api/... (test server paths) → Pink org routes. */
@@ -104,8 +102,13 @@ function resolveRequestUrl(path: string, query?: ApiOpts['query']): string {
   }
 
   const base = pinkApiRoot();
-  const orgPath = path.startsWith('/api') ? `${base}/org${path.slice('/api'.length)}` : `${base}${path.startsWith('/') ? path : `/${path}`}`;
-  const url = new URL(orgPath);
+  let orgPath: string;
+  if (base) {
+    orgPath = path.startsWith('/api') ? `${base}/org${path.slice('/api'.length)}` : `${base}${path.startsWith('/') ? path : `/${path}`}`;
+  } else {
+    orgPath = path.startsWith('/api') ? `/api/v1/org${path.slice('/api'.length)}` : `/api/v1${path.startsWith('/') ? path : `/${path}`}`;
+  }
+  const url = new URL(orgPath, window.location.origin);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v === undefined || v === null || v === '') continue;

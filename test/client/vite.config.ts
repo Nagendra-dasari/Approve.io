@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
     define: {
       __PINK_ORG_EMBED__: JSON.stringify(embed),
       __PINK_API_BASE__: JSON.stringify(
-        embed ? env.VITE_API_BASE_URL || 'http://127.0.0.1:5001/api/v1' : '',
+        embed ? env.VITE_API_BASE_URL || '' : '',
       ),
     },
     server: {
