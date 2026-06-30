@@ -42,25 +42,34 @@ function userToPosition(u, roleById) {
 }
 
 async function loadSnapshot(tenantId) {
-  const allRoles = await Role.find({ tenantId }).lean();
-  const systemRoleIds = allRoles
-    .filter((r) => r.type === "SYSTEM")
-    .map((r) => String(r._id));
+  const Permission = require("../../models/permission.model");
+  const tenantMgmtPerm = await Permission.findOne({ code: "tenant.manage" }).lean();
+  const adminPermId = tenantMgmtPerm ? String(tenantMgmtPerm._id) : null;
 
-  const [users, roles] = await Promise.all([
-    User.find({
-      tenantId,
-      orgLeftAt: null,
-      status: { $in: ["ACTIVE", "INVITED", "OTP_PENDING"] },
-      ...(systemRoleIds.length
-        ? { roleIds: { $not: { $elemMatch: { $in: systemRoleIds } } } }
-        : {}),
-    })
-      .populate("roleIds")
-      .populate("reportingToUserId", "name email empCode")
-      .sort({ name: 1 }),
-    Role.find({ tenantId }),
-  ]);
+  const allRoles = await Role.find({ tenantId }).lean();
+  const adminRoleIds = new Set();
+  if (adminPermId) {
+    for (const r of allRoles) {
+      const ids = (r.permissionIds || []).map(String);
+      if (ids.includes(adminPermId)) {
+        adminRoleIds.add(String(r._id));
+      }
+    }
+  }
+
+  const users = await User.find({
+    tenantId,
+    orgLeftAt: null,
+    status: { $in: ["ACTIVE", "INVITED", "OTP_PENDING"] },
+    ...(adminRoleIds.size
+      ? { roleIds: { $not: { $elemMatch: { $in: [...adminRoleIds] } } } }
+      : {}),
+  })
+    .populate("roleIds")
+    .populate("reportingToUserId", "name email empCode")
+    .sort({ name: 1 });
+
+  const roles = allRoles.filter((r) => !adminRoleIds.has(String(r._id)));
 
   const roleById = new Map(roles.map((r) => [String(r._id), r]));
   let maxLevel = 1;
