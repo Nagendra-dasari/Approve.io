@@ -53,7 +53,7 @@ async function seed() {
   for (const cfg of roleConfigs) {
     roles[cfg.name] = await Role.findOneAndUpdate(
       { tenantId: tenant._id, name: cfg.name },
-      { tenantId: tenant._id, name: cfg.name, type: "CUSTOM", permissionIds: cfg.codes },
+      { tenantId: tenant._id, name: cfg.name, type: cfg.name === "Tenant Admin" ? "SYSTEM" : "CUSTOM", permissionIds: cfg.codes },
       { upsert: true, returnDocument: "after", setDefaultsOnInsert: true },
     );
   }
