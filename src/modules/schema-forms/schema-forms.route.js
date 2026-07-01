@@ -1,4 +1,3 @@
-const path = require("path");
 const express = require("express");
 const env = require("../../config/env");
 
@@ -6,20 +5,24 @@ process.env.PINK_FORM_SUBMISSIONS_PATH = env.PINK_FORM_SUBMISSIONS_PATH;
 
 const router = express.Router();
 
-function tryRequire(mod) {
-  try { return require(mod); } catch { return null; }
-}
+let modulesRouter, submissionsRouter, seedRouter;
 
-const modulesRouter = tryRequire(path.join(__dirname, "..", "..", "..", "pink-form", "src", "routes", "modules"));
-const submissionsRouter = tryRequire(path.join(__dirname, "..", "..", "..", "pink-form", "src", "routes", "submissions"));
-const seedRouter = tryRequire(path.join(__dirname, "..", "..", "..", "pink-form", "src", "routes", "seed"));
+try {
+  modulesRouter = require("../../../pink-form/src/routes/modules");
+  submissionsRouter = require("../../../pink-form/src/routes/submissions");
+  seedRouter = require("../../../pink-form/src/routes/seed");
+} catch (err) {
+  console.error("[schema-forms] Failed to load pink-form routers:", err.message);
+}
 
 if (modulesRouter) router.use("/modules", modulesRouter);
 if (submissionsRouter) router.use("/submissions", submissionsRouter);
 if (seedRouter) router.use("/seed", seedRouter);
 
-router.use("/", (req, res) => {
-  res.status(503).json({ message: "Schema forms module not available" });
-});
+if (!modulesRouter && !submissionsRouter && !seedRouter) {
+  router.use("/", (_req, res) => {
+    res.status(503).json({ message: "Schema forms module not available" });
+  });
+}
 
 module.exports = router;
